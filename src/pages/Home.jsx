@@ -18,9 +18,70 @@ function Home() {
         loadProjects();
     }, [navigate]);
 
+    // 팀 일정에서 가장 많이 겹치는 날짜와 시간 찾기
+    const findBestMeetingTime = (projectId) => {
+        if (!projectId) return null;
+
+        // 모든 localStorage 키에서 해당 프로젝트의 개인 일정 찾기
+        const teamSchedules = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`personalSchedule_${projectId}_`)) {
+                const schedule = Storage.get(key);
+                if (schedule && Array.isArray(schedule)) {
+                    teamSchedules.push(schedule);
+                }
+            }
+        }
+
+        if (teamSchedules.length === 0) return null;
+
+        // 각 셀에 대해 몇 명이 선택했는지 카운트
+        const overlapMap = new Map();
+        teamSchedules.forEach(schedule => {
+            schedule.forEach(cellKey => {
+                const count = overlapMap.get(cellKey) || 0;
+                overlapMap.set(cellKey, count + 1);
+            });
+        });
+
+        // 가장 많이 겹치는 셀 찾기
+        let maxCount = 0;
+        let bestCellKey = null;
+        overlapMap.forEach((count, cellKey) => {
+            if (count > maxCount) {
+                maxCount = count;
+                bestCellKey = cellKey;
+            }
+        });
+
+        if (!bestCellKey) return null;
+
+        // cellKey 형식: "09:00-0" (time-dayIndex)
+        const [time, dayIndexStr] = bestCellKey.split('-');
+        const dayIndex = parseInt(dayIndexStr, 10);
+
+        // 현재 날짜 기준으로 7일 중 해당 인덱스의 날짜 계산
+        const today = new Date();
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + dayIndex);
+
+        // 날짜 포맷팅: YYYY-MM-DD HH:MM
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day} ${time}`;
+    };
+
     const loadProjects = () => {
         const allProjects = Projects.getAll();
-        setProjects(allProjects);
+        // 각 프로젝트에 대해 가장 좋은 회의 시간 계산
+        const projectsWithMeetingTime = allProjects.map(project => ({
+            ...project,
+            nextMeeting: findBestMeetingTime(project.id) || project.nextMeeting || '0000-00-00 00:00'
+        }));
+        setProjects(projectsWithMeetingTime);
     };
 
     const deleteProject = (projectId) => {

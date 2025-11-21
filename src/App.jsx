@@ -8,6 +8,7 @@ import FocusMode from './pages/FocusMode';
 import CardsPage from './pages/Cards';
 import NewCard from './pages/NewCard';
 import Schedule from './pages/Schedule';
+import PersonalSchedule from './pages/PersonalSchedule';
 import MyPage from './pages/MyPage';
 import './index.css';
 
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/cards" element={<CardsPage />} />
                 <Route path="/new-card" element={<NewCard />} />
                 <Route path="/schedule" element={<Schedule />} />
+                <Route path="/personal-schedule" element={<PersonalSchedule />} />
                 <Route path="/mypage" element={<MyPage />} />
             </Routes>
         </BrowserRouter>
