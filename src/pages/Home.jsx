@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Projects } from '../utils/projects';
 import { Storage } from '../utils/storage';
 import { calculateDDay } from '../utils/helpers';
+import { deleteProject as deleteProjectAPI } from '../utils/api';
 import Logo from '../components/Logo';
 
 function Home() {
@@ -84,8 +85,28 @@ function Home() {
         setProjects(projectsWithMeetingTime);
     };
 
-    const deleteProject = (projectId) => {
+    const deleteProject = async (projectId) => {
         if (window.confirm('이 팀을 삭제하시겠습니까?')) {
+            // 로컬 프로젝트에서 백엔드 ID 확인
+            const localProjects = Projects.getAll();
+            const localProject = localProjects.find((p) => p.id === projectId);
+            const backendProjectId = localProject?.backendId;
+
+            // 백엔드에서 프로젝트 삭제
+            if (backendProjectId) {
+                try {
+                    const result = await deleteProjectAPI(backendProjectId);
+                    if (result.success) {
+                        console.log('프로젝트가 백엔드에서 삭제되었습니다:', backendProjectId);
+                    } else {
+                        console.error('프로젝트 삭제 실패:', result.error);
+                    }
+                } catch (error) {
+                    console.error('프로젝트 삭제 중 오류:', error);
+                }
+            }
+
+            // 로컬 스토리지에서 프로젝트 삭제
             Projects.remove(projectId);
             loadProjects();
         }

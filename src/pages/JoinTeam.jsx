@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Projects } from '../utils/projects';
 import { Storage } from '../utils/storage';
+import { getProjects, createProjectMember } from '../utils/api';
 import Logo from '../components/Logo';
 import backIcon from '../assets/back.png';
 
@@ -9,7 +10,7 @@ function JoinTeam() {
     const navigate = useNavigate();
     const [code, setCode] = useState('');
 
-    const joinTeam = () => {
+    const joinTeam = async () => {
         const teamCode = code.trim().toUpperCase();
 
         if (!teamCode || teamCode.length !== 6) {
@@ -17,23 +18,71 @@ function JoinTeam() {
             return;
         }
 
-        const projects = Projects.getAll();
-        const project = projects.find((p) => p.code === teamCode);
+        // 먼저 백엔드에서 프로젝트 조회
+        let backendProject = null;
+        try {
+            const projectsResult = await getProjects();
+            if (projectsResult.success && projectsResult.data) {
+                const projects = Array.isArray(projectsResult.data) ? projectsResult.data : [];
+                backendProject = projects.find((p) => p.code === teamCode);
+            }
+        } catch (error) {
+            console.error('백엔드에서 프로젝트 조회 실패:', error);
+        }
 
-        if (!project) {
+        // 로컬 스토리지에서도 프로젝트 찾기
+        const localProjects = Projects.getAll();
+        const localProject = localProjects.find((p) => p.code === teamCode);
+
+        // 백엔드 또는 로컬에서 프로젝트를 찾지 못한 경우
+        if (!backendProject && !localProject) {
             alert('유효하지 않은 팀 코드입니다.');
             return;
         }
 
         const profile = Storage.get('userProfile');
-        if (profile && project.members) {
-            if (!project.members.find((m) => m.id === profile.name)) {
-                project.members.push({
+        const userId = Storage.get('userId');
+        
+        // 백엔드 프로젝트가 있으면 백엔드에 멤버 추가
+        let projectId = null;
+        if (backendProject) {
+            projectId = backendProject.id;
+        } else if (localProject && localProject.backendId) {
+            projectId = localProject.backendId;
+        }
+
+        // 로컬 스토리지에 멤버 추가 (로컬 프로젝트가 있는 경우)
+        if (localProject && profile && localProject.members) {
+            if (!localProject.members.find((m) => m.id === profile.name)) {
+                localProject.members.push({
                     id: profile.name,
                     name: profile.name
                 });
-                Projects.update(project.id, { members: project.members });
+                Projects.update(localProject.id, { members: localProject.members });
             }
+        }
+
+        // 백엔드에 프로젝트 멤버 생성 (일반 멤버)
+        if (userId && projectId) {
+            try {
+                // roleId: 2 = 일반 멤버
+                const memberData = {
+                    projectId: projectId,
+                    userId: parseInt(userId) || userId,
+                    roleId: 2 // 일반 멤버 역할
+                };
+                
+                const result = await createProjectMember(memberData);
+                if (result.success) {
+                    console.log('프로젝트 멤버가 백엔드에 생성되었습니다:', result.data);
+                } else {
+                    console.error('프로젝트 멤버 생성 실패:', result.error);
+                }
+            } catch (error) {
+                console.error('프로젝트 멤버 생성 중 오류:', error);
+            }
+        } else {
+            console.warn('userId 또는 projectId가 없어 백엔드에 프로젝트 멤버를 생성할 수 없습니다.');
         }
 
         alert('팀에 참여했습니다!');

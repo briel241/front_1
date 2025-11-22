@@ -6,6 +6,7 @@ import { FocusTimer } from '../utils/timer';
 import { sendFocusSession } from '../utils/api';
 import Logo from '../components/Logo';
 import backIcon from '../assets/back.png';
+import focusModeIcon from '../assets/focusmode.png';
 
 function FocusMode() {
     const navigate = useNavigate();
@@ -135,7 +136,14 @@ function FocusMode() {
                     style={{ height: '19px', width: 'auto', objectFit: 'contain' }}
                 />
             </div>
-            <div className="subtitle">집중 모드</div>
+            <div className="subtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img 
+                    src={focusModeIcon} 
+                    alt="집중 모드" 
+                    style={{ height: '22px', width: 'auto', objectFit: 'contain' }}
+                />
+                <span>집중 모드</span>
+            </div>
             <div className="content">
                 <div className="focus-timer-block">
                     <div className="project-title-focus">
