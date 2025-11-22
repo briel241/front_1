@@ -2,6 +2,10 @@
 // 백엔드 API 엔드포인트 기본 URL (환경변수나 설정에서 가져올 수 있음)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://13.125.224.125:8080/api/v1';
 
+// 디버깅: 현재 사용 중인 API URL 확인
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('VITE_API_URL 환경 변수:', import.meta.env.VITE_API_URL);
+
 /**
  * 집중 세션 정보를 백엔드로 전송
  * @param {Object} sessionData - 세션 데이터
