@@ -1,7 +1,7 @@
 // API 호출 유틸리티
 // 백엔드 API 엔드포인트 기본 URL (환경변수나 설정에서 가져올 수 있음)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://13.125.224.125:8080/api/v1';
-const SESSION_API_BASE_URL = import.meta.env.VITE_API_URL || 'https://13.125.224.125:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://www.coordin8.o-r.kr/api/v1';
+const SESSION_API_BASE_URL = import.meta.env.VITE_API_URL || 'https://www.coordin8.o-r.kr/api';
 
 // 디버깅: 현재 사용 중인 API URL 확인
 console.log('API_BASE_URL:', API_BASE_URL);
